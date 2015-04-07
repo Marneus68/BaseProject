@@ -1,0 +1,147 @@
+#!/bin/bash
+
+# Colors
+green=$(eval tput setaf 2);
+black=$(eval tput setaf 0);
+red=$(eval tput setaf 1);
+green=$(eval tput setaf 2);
+yellow=$(eval tput setaf 3);
+blue=$(eval tput setaf 4);
+magenta=$(eval tput setaf 5);
+cyan=$(eval tput setaf 2);
+white=$(eval tput setaf 7);
+reset=$(eval tput sgr0);
+
+configfile="~/.bprc"
+
+service="github"
+username="base_project"
+trigger="base_"
+
+askyn() {
+    echo lel
+}
+
+askYn() {
+    valid=false;
+    while [ "$valid" = false ]; do
+        printf "["$green"?"$reset"] ""$1"" (Y/n) ";
+        read -r LINE || [[ -n $LINE ]];
+        input=$(echo "$LINE" | tr '[:upper:]' '[:lower:]');
+        case "$input" in
+            y|yes|"")
+                control=true;
+                valid=true;
+                ;;
+            n|no)
+                control=false;
+                valid=true;
+                ;;
+            *)
+                echo $red"Invalid input!"$reset;
+                ;;
+        esac
+    done
+}
+
+askyN() {
+    valid=false;
+    while [ "$valid" = false ]; do
+        printf "["$green"?"$reset"] ""$1"" (y/N) ";
+        read -r LINE || [[ -n $LINE ]];
+        input=$(echo "$LINE" | tr '[:upper:]' '[:lower:]');
+        case "$input" in
+            n|no|"")
+                control=false;
+                valid=true;
+                ;;
+            y|yes)
+                control=true;
+                valid=true;
+                ;;
+            *)
+                echo $red"Invalid input!"$reset;
+                ;;
+        esac
+    done
+}
+
+selectService() {
+    echo "["$yellow">"$reset"] Select the service you use to host your base projects (default: github):"
+}
+
+inputUsername() {
+    valid=false;
+    while [ "$valid" = false ]; do
+        printf "["$magenta"a"$reset"] Input your user name: "
+        read -r LINE || [[ -n $LINE ]];
+        if [ "$LINE" != "" ]; then
+            case $LINE in  
+                *\ * )
+                    echo $red"Invalid input!"$reset;
+                    ;;
+                *)
+                    valid=true;
+                    username=$LINE;
+                    ;;
+            esac
+        else
+            echo $red"Invalid input!"$reset;
+        fi
+    done
+}
+
+inputBaseProjectTrigger() {
+    valid=false;
+    while [ "$valid" = false ]; do
+        printf "["$magenta"a"$reset"] Input your base project trigger (default: base_): "
+        read -r LINE || [[ -n $LINE ]];
+        if [ "$LINE" != "" ]; then
+            case $LINE in  
+                *\ * )
+                    echo $red"Invalid input!"$reset;
+                    ;;
+                *)
+                    valid=true;
+                    trigger=$LINE;
+                    ;;
+            esac
+        else
+            valid=true;
+        fi
+    done
+}
+
+checkConfig() {
+    case $service in
+        github)
+            echo "Checking the user name ("$username") against the github API..."
+            control=true;
+            ;;
+    esac
+}
+
+if [ -f "$configfile" ]; then
+    echo $green"Config file found."$reset
+else
+    echo $magenta"No config file found."$reset
+    echo 
+    askYn "Before going any further we nedd to ask you a few things."
+    if [ "$control" = true ]; then
+        control=false;
+        while [ "$control" = false ]; do
+            selectService
+            inputUsername
+            inputBaseProjectTrigger
+
+            checkConfig
+        done
+
+        echo $magenta"Writing stuff to the configuration file (""$configfile"")..."$reset
+    fi
+
+    echo $service
+    echo $username
+    echo $trigger
+fi
+
