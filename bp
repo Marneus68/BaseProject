@@ -1,5 +1,16 @@
 #!/bin/bash
 
+# Name and version
+progname="BaseProject"
+version="0.1"
+creator="Duane Bekaert"
+
+# Default value
+configfile=$(eval echo ~)"/.bprc"
+service="github"
+username="base_project"
+trigger="base_"
+
 # Colors
 green=$(eval tput setaf 2);
 black=$(eval tput setaf 0);
@@ -11,16 +22,6 @@ magenta=$(eval tput setaf 5);
 cyan=$(eval tput setaf 2);
 white=$(eval tput setaf 7);
 reset=$(eval tput sgr0);
-
-configfile="~/.bprc"
-
-service="github"
-username="base_project"
-trigger="base_"
-
-askyn() {
-    echo lel
-}
 
 askYn() {
     valid=false;
@@ -73,7 +74,7 @@ selectService() {
 inputUsername() {
     valid=false;
     while [ "$valid" = false ]; do
-        printf "["$magenta"a"$reset"] Input your user name: "
+        printf "["$magenta"a"$reset"] Input your user name (default: ""$username""): "
         read -r LINE || [[ -n $LINE ]];
         if [ "$LINE" != "" ]; then
             case $LINE in  
@@ -86,7 +87,8 @@ inputUsername() {
                     ;;
             esac
         else
-            echo $red"Invalid input!"$reset;
+            #echo $red"Invalid input!"$reset;
+            valid=true;
         fi
     done
 }
@@ -94,7 +96,7 @@ inputUsername() {
 inputBaseProjectTrigger() {
     valid=false;
     while [ "$valid" = false ]; do
-        printf "["$magenta"a"$reset"] Input your base project trigger (default: base_): "
+        printf "["$magenta"a"$reset"] Input your base project trigger (default: ""$trigger""): "
         read -r LINE || [[ -n $LINE ]];
         if [ "$LINE" != "" ]; then
             case $LINE in  
@@ -121,12 +123,45 @@ checkConfig() {
     esac
 }
 
-if [ -f "$configfile" ]; then
+writeConfig() {
+    rm -rf "$configfile"
+    touch "$configfile"
+}
+
+readConfig() {
+    if [ -f $configfile ]; then
+        echo $magenta"Reading configuration from file ("$configfile")..."$reset
+        counter=0
+        cat $configfile | while read LINE; do 
+            let "counter += 1"
+            case $counter in
+                1) 
+                    echo $LINE;
+                    service=$LINE;
+                    ;;
+                2) 
+                    echo $LINE;
+                    username=$LINE;
+                    ;;
+                3) 
+                    echo $LINE;
+                    trigger=$LINE;
+                    ;;
+                *)
+                    ;;
+            esac
+        done
+    fi
+}
+
+echo $progname" v"$version" - "$creator
+
+if [ -f $configfile ]; then
     echo $green"Config file found."$reset
+    readConfig
 else
     echo $magenta"No config file found."$reset
-    echo 
-    askYn "Before going any further we nedd to ask you a few things."
+    askYn "Before going any further we nedd to ask you a few things. (No: use default values for this session only)"
     if [ "$control" = true ]; then
         control=false;
         while [ "$control" = false ]; do
@@ -137,11 +172,14 @@ else
             checkConfig
         done
 
-        echo $magenta"Writing stuff to the configuration file (""$configfile"")..."$reset
+        echo $magenta"Writing stuff to the configuration file ($configfile)..."$reset
+        writeConfig
+    else
+        echo $magenta"Using default configuration, for this session only."$reset
     fi
-
-    echo $service
-    echo $username
-    echo $trigger
 fi
+
+echo $service
+echo $username
+echo $trigger
 
