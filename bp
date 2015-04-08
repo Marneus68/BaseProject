@@ -2,6 +2,7 @@
 
 # Name and version
 progname="BaseProject"
+exname="bp"
 version="0.1"
 creator="Duane Bekaert"
 
@@ -10,6 +11,17 @@ configfile=$(eval echo ~)"/.bprc"
 service="github"
 username="base_project"
 trigger="base_"
+
+update=0
+default=0
+login=0
+
+### API queries
+# github
+gh_usercheck='curl -s https://api.github.com/users/%USERNAME% | grep "Not Found"'
+gh_usercheck_login='curl -s --user %USERNAME% https://api.github.com/users/%USERNAME% | grep "Not Found"'
+gh_bpindex=''
+gh_bpindex_login=''
 
 # Colors
 green=$(eval tput setaf 2);
@@ -87,7 +99,6 @@ inputUsername() {
                     ;;
             esac
         else
-            #echo $red"Invalid input!"$reset;
             valid=true;
         fi
     done
@@ -116,9 +127,25 @@ inputBaseProjectTrigger() {
 
 checkConfig() {
     case $service in
-        github)
-            echo "Checking the user name ("$username") against the github API..."
-            control=true;
+        github )
+            printf "Checking the user name ("$username") against the github API… "
+            eval tput sc
+            if [ $login = 0 ]; then
+                querry=${gh_usercheck//%USERNAME%/$username}
+                temp=$(eval $querry)
+            elif [ $login = 1 ]; then
+                printf "\n"
+                querry=${gh_usercheck_login//%USERNAME%/$username}
+                temp=$(eval $querry)
+                eval tput rc
+            fi
+            if [ "$temp" = "" ]; then
+                printf "["$green"ok"$reset"]\n"
+                control=false;
+            else
+                printf "["$red"err"$reset"]\n"
+                control=true;
+            fi
             ;;
     esac
 }
@@ -133,29 +160,78 @@ writeConfig() {
 
 readConfig() {
     if [ -f $configfile ]; then
-        echo $magenta"Reading configuration from file ("$configfile")..."$reset
+        echo $magenta"Reading configuration from file ("$configfile")…"$reset
 
         service=$(sed -n 1p $configfile)
         username=$(sed -n 2p $configfile)
         trigger=$(sed -n 3p $configfile)
     fi
+    control=false
+}
+
+updateBaseProjects() {
+    printf $magenta"Updating the index of base projects…"$reset
+
+    #printf "["$green"ok"$reset"]\n"
+    #printf "["$red"err"$reset"]\n"
+    printf "\n"
 }
 
 printUsage() {
-    echo $progname
+    echo $progname"."
+    echo
+    echo "Usage:"
+    echo
+    echo "Options:"
+    echo
 }
+
+### Beginning of the script
+
+# Handle command line argument
+while [ "$1" != "" ]; do
+    case $1 in
+        -l | --login)
+            login=1;
+            ;;
+        -d | --default)
+            default=1;
+            ;;
+        -u | --update )
+            update=1
+            exit
+            ;;
+        -V | --version )
+            echo $version
+            exit
+            ;;
+        -h | --help )           
+            printUsage
+            exit
+            ;;
+        * )
+            printUsage
+            exit 1
+            ;;
+    esac
+    shift
+done
 
 echo $progname" v"$version" - "$creator
 
 if [ -f $configfile ]; then
-    echo $green"Config file found."$reset
-    readConfig
+    echo $green"Configuration file found."$reset
+    if [ $default = 1 ]; then
+        echo $magenta"Using default configuration, for this session only."$reset
+    else 
+        readConfig
+    fi
 else
-    echo $magenta"No config file found."$reset
+    echo $magenta"No configuration file found."$reset
     askYn "Before going any further we nedd to ask you a few things. (No: use default values for this session only)"
     if [ "$control" = true ]; then
-        control=false;
-        while [ "$control" = false ]; do
+        control=true
+        while [ "$control" = true ]; do
             selectService
             inputUsername
             inputBaseProjectTrigger
@@ -163,11 +239,16 @@ else
             checkConfig
         done
 
-        echo $magenta"Writing stuff to the configuration file ($configfile)..."$reset
+        echo $magenta"Writing stuff to the configuration file ($configfile)…"$reset
         writeConfig
     else
         echo $magenta"Using default configuration, for this session only."$reset
     fi
+fi
+
+if [ $update = 1 ]; then
+    updateBaseProjects
+    exit
 fi
 
 echo $service
