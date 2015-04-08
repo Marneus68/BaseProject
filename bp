@@ -126,32 +126,23 @@ checkConfig() {
 writeConfig() {
     rm -rf "$configfile"
     touch "$configfile"
+    echo "$service" >> $configfile
+    echo "$username" >> $configfile
+    echo "$trigger" >> $configfile
 }
 
 readConfig() {
     if [ -f $configfile ]; then
         echo $magenta"Reading configuration from file ("$configfile")..."$reset
-        counter=0
-        cat $configfile | while read LINE; do 
-            let "counter += 1"
-            case $counter in
-                1) 
-                    echo $LINE;
-                    service=$LINE;
-                    ;;
-                2) 
-                    echo $LINE;
-                    username=$LINE;
-                    ;;
-                3) 
-                    echo $LINE;
-                    trigger=$LINE;
-                    ;;
-                *)
-                    ;;
-            esac
-        done
+
+        service=$(sed -n 1p $configfile)
+        username=$(sed -n 2p $configfile)
+        trigger=$(sed -n 3p $configfile)
     fi
+}
+
+printUsage() {
+    echo $progname
 }
 
 echo $progname" v"$version" - "$creator
