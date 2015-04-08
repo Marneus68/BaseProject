@@ -160,13 +160,19 @@ writeConfig() {
 
 readConfig() {
     if [ -f $configfile ]; then
-        echo $magenta"Reading configuration from file ("$configfile")…"$reset
+        printf "Reading configuration from file ("$configfile")… "
 
-        service=$(sed -n 1p $configfile)
-        username=$(sed -n 2p $configfile)
-        trigger=$(sed -n 3p $configfile)
+        local_service=$(sed -n 1p $configfile)
+        local_username=$(sed -n 2p $configfile)
+        local_trigger=$(sed -n 3p $configfile)
+        if [[ "$local_service" = "" || "$local_username" = "" || "$local_trigger" = "" ]]; then
+            printf "["$red"err"$reset"]\n"
+            control=false
+        else
+            printf "["$green"ok"$reset"]\n"
+            control=true
+        fi
     fi
-    control=false
 }
 
 updateBaseProjects() {
@@ -178,7 +184,7 @@ updateBaseProjects() {
 }
 
 printUsage() {
-    echo $progname"."
+    echo $progname" v"$version" - "$creator
     echo
     echo "Usage:"
     echo
@@ -186,9 +192,28 @@ printUsage() {
     echo
 }
 
+inputConfig() {
+    askYn "Before going any further we nedd to ask you a few things. (No: use default values for this session only)"
+    if [ "$control" = true ]; then
+        control=true
+        while [ "$control" = true ]; do
+            selectService
+            inputUsername
+            inputBaseProjectTrigger
+
+            checkConfig
+        done
+
+        echo $magenta"Writing stuff to the configuration file ($configfile)…"$reset
+        writeConfig
+    else
+        echo $magenta"Using default configuration, for this session only."$reset
+    fi
+}
+
 ### Beginning of the script
 
-# Handle command line argument
+# Handle command line arguments
 while [ "$1" != "" ]; do
     case $1 in
         -l | --login)
@@ -210,6 +235,7 @@ while [ "$1" != "" ]; do
             exit
             ;;
         * )
+            echo "Wrong command line parameter."
             printUsage
             exit 1
             ;;
@@ -225,25 +251,14 @@ if [ -f $configfile ]; then
         echo $magenta"Using default configuration, for this session only."$reset
     else 
         readConfig
+        if [ "$control" = false ]; then
+            echo $magenta"Configuration file corrupted."$reset
+            inputConfig
+        fi
     fi
 else
     echo $magenta"No configuration file found."$reset
-    askYn "Before going any further we nedd to ask you a few things. (No: use default values for this session only)"
-    if [ "$control" = true ]; then
-        control=true
-        while [ "$control" = true ]; do
-            selectService
-            inputUsername
-            inputBaseProjectTrigger
-
-            checkConfig
-        done
-
-        echo $magenta"Writing stuff to the configuration file ($configfile)…"$reset
-        writeConfig
-    else
-        echo $magenta"Using default configuration, for this session only."$reset
-    fi
+    inputConfig
 fi
 
 if [ $update = 1 ]; then
@@ -251,7 +266,7 @@ if [ $update = 1 ]; then
     exit
 fi
 
-echo $service
-echo $username
-echo $trigger
+#echo $service
+#echo $username
+#echo $trigger
 
