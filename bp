@@ -10,6 +10,7 @@ creator="Duane Bekaert"
 configfile=$(eval echo ~)"/.bprc"
 service="github"
 username="base_project"
+orgname=""
 trigger="base_"
 
 update=0
@@ -20,8 +21,12 @@ login=0
 # github
 gh_usercheck='curl -s https://api.github.com/users/%USERNAME% | grep "Not Found"'
 gh_usercheck_login='curl -s --user %USERNAME% https://api.github.com/users/%USERNAME% | grep "Not Found"'
-gh_bpindex=''
-gh_bpindex_login=''
+
+gh_bpindex='curl -s https://api.github.com/users/%USERNAME%/repos'
+gh_bpindex_login='curl -s --user %USERNAME% https://api.github.com/users/%USERNAME%/repos'
+
+#gh_indexcleaner=grep -e '"name": "' | sed -e 's/ *"name" *: *"//g' | sed -e 's/\\"/"/g' | sed -e 's/",$/ /g' | sed -e 's/^ *$/No description./g'
+gh_indexcleaner=' | grep -e '\''"%QUERRY%": "'\'' | sed -e '\''s/ *"%QUERRY%" *: *"//g'\'' | sed -e '\''s/\\"/"/g'\'' | sed -e '\''s/",$/ /g'\'' | sed -e '\''s/^ *$/No description./g'\'''
 
 # Colors
 green=$(eval tput setaf 2);
@@ -169,8 +174,12 @@ readConfig() {
             printf "["$red"err"$reset"]\n"
             control=false
         else
+    
             printf "["$green"ok"$reset"]\n"
             control=true
+            username="$local_username"
+            service="$local_service"
+            trigger="$local_trigger"
         fi
     fi
 }
@@ -178,8 +187,20 @@ readConfig() {
 updateBaseProjects() {
     printf $magenta"Updating the index of base projects…"$reset
 
+    #gh_bpindex_return=''
+
+    #gh_bpindex='curl -s https://api.github.com/users/%USERNAME%/repos'
+    #gh_bpindex_login='curl -s --user %USERNAME% https://api.github.com/users/%USERNAME%/repos'
+
+    querry="${gh_bpindex//%USERNAME%/$username}"
+
+    ret=$(eval $querry)
+
+    echo $ret
+
     #printf "["$green"ok"$reset"]\n"
     #printf "["$red"err"$reset"]\n"
+
     printf "\n"
 }
 
@@ -224,7 +245,6 @@ while [ "$1" != "" ]; do
             ;;
         -u | --update )
             update=1
-            exit
             ;;
         -V | --version )
             echo $version
