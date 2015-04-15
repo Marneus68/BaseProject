@@ -40,6 +40,8 @@ cyan=$(eval tput setaf 2);
 white=$(eval tput setaf 7);
 reset=$(eval tput sgr0);
 
+DEFAULTIFS=$IFS
+
 askYn() {
     valid=false;
     while [ "$valid" = false ]; do
@@ -187,11 +189,6 @@ readConfig() {
 updateBaseProjects() {
     printf $magenta"Updating the index of base projects…"$reset
 
-    #gh_bpindex_return=''
-
-    #gh_bpindex='curl -s https://api.github.com/users/%USERNAME%/repos'
-    #gh_bpindex_login='curl -s --user %USERNAME% https://api.github.com/users/%USERNAME%/repos'
-
     querry="${gh_bpindex//%USERNAME%/$username}"
 
     ret="$(eval $querry)"
@@ -201,18 +198,15 @@ updateBaseProjects() {
     filter_httpclone=${gh_indexcleaner//%QUERRY%/clone_url}
     filter_sshclone=${gh_indexcleaner//%QUERRY%/ssh_url}
 
+    IFS=$'\n' GLOBIGNORE='*'
+
     retnames=($(eval "echo \"\$ret\" $filter_name"))
     retdescs=($(eval "echo \"\$ret\" $filter_desc"))
     rethttpclone=($(eval "echo \"\$ret\" $filter_httpclone"))
     retsshclone=($(eval "echo \"\$ret\" $filter_sshclone"))
 
-    #echo $retnames
-    #echo $retdescs
-    #echo $rethttpclone
-    #echo $retsshclone
-
     printf '%s\n' "${retnames[@]}"
-    #printf '%s\n' "${retdescs[@]}"
+    printf '%s\n' "${retdescs[@]}"
     printf '%s\n' "${rethttpclone[@]}"
     printf '%s\n' "${retsshclone[@]}"
 
