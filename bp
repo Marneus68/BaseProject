@@ -194,9 +194,27 @@ updateBaseProjects() {
 
     querry="${gh_bpindex//%USERNAME%/$username}"
 
-    ret=$(eval $querry)
+    ret="$(eval $querry)"
 
-    echo $ret
+    filter_name=${gh_indexcleaner//%QUERRY%/name}
+    filter_desc=${gh_indexcleaner//%QUERRY%/description}
+    filter_httpclone=${gh_indexcleaner//%QUERRY%/clone_url}
+    filter_sshclone=${gh_indexcleaner//%QUERRY%/ssh_url}
+
+    retnames=($(eval "echo \"\$ret\" $filter_name"))
+    retdescs=($(eval "echo \"\$ret\" $filter_desc"))
+    rethttpclone=($(eval "echo \"\$ret\" $filter_httpclone"))
+    retsshclone=($(eval "echo \"\$ret\" $filter_sshclone"))
+
+    #echo $retnames
+    #echo $retdescs
+    #echo $rethttpclone
+    #echo $retsshclone
+
+    printf '%s\n' "${retnames[@]}"
+    #printf '%s\n' "${retdescs[@]}"
+    printf '%s\n' "${rethttpclone[@]}"
+    printf '%s\n' "${retsshclone[@]}"
 
     #printf "["$green"ok"$reset"]\n"
     #printf "["$red"err"$reset"]\n"
