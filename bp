@@ -8,6 +8,7 @@ creator="Duane Bekaert"
 
 # Default value
 configfile=$(eval echo ~)"/.bprc"
+indexfile=$(eval echo ~)"/.bpindex"
 service="github"
 username="base_project"
 orgname=""
@@ -41,6 +42,7 @@ white=$(eval tput setaf 7);
 reset=$(eval tput sgr0);
 
 DEFAULTIFS=$IFS
+DEFAULTGLOBIGNORE=$GLOBIGNORE
 
 askYn() {
     valid=false;
@@ -187,7 +189,7 @@ readConfig() {
 }
 
 updateBaseProjects() {
-    printf $magenta"Updating the index of base projects…"$reset
+    printf "Updating the index of base projects… "
 
     querry="${gh_bpindex//%USERNAME%/$username}"
 
@@ -205,15 +207,23 @@ updateBaseProjects() {
     rethttpclone=($(eval "echo \"\$ret\" $filter_httpclone"))
     retsshclone=($(eval "echo \"\$ret\" $filter_sshclone"))
 
-    printf '%s\n' "${retnames[@]}"
-    printf '%s\n' "${retdescs[@]}"
-    printf '%s\n' "${rethttpclone[@]}"
-    printf '%s\n' "${retsshclone[@]}"
+    #printf '%s\n' "${retnames[@]}"
 
-    #printf "["$green"ok"$reset"]\n"
-    #printf "["$red"err"$reset"]\n"
+    printf "["$green"ok"$reset"]\n"
 
-    printf "\n"
+    rm -rf "$indexfile"
+    touch "$indexfile"
+
+    count=0
+    retnames_length=${#retnames[@]}
+    for (( i=0; i<${retnames_length}; i++ ));
+    do
+        if [[ ${retnames[$i]} == $trigger* ]]; then
+            printf "${retnames[$i]} ${rethttpclone[$1]} ${retsshclone[$1]} ${retdescs[$i]}\n" >> $indexfile
+            count=$(( count + 1 ))
+        fi
+    done
+    #echo "Found "$count" projects(s) tht can be used as a BaseProjects."
 }
 
 printUsage() {
@@ -237,7 +247,7 @@ inputConfig() {
             checkConfig
         done
 
-        echo $magenta"Writing stuff to the configuration file ($configfile)…"$reset
+        #echo $magenta"Writing stuff to the configuration file ($configfile)…"$reset
         writeConfig
     else
         echo $magenta"Using default configuration, for this session only."$reset
@@ -296,6 +306,10 @@ fi
 if [ $update = 1 ]; then
     updateBaseProjects
     exit
+fi
+
+if [ ! -e $indexfile ]; then
+    updateBaseProjects
 fi
 
 #echo $service
