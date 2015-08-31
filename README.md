@@ -8,6 +8,13 @@ BaseProject is an attempt at creating a simple way to manage project stubs with 
 
 Basically, you store some projects you want to use as bases on your GitHub repo. You configure the BaseProject to look up on that repo, and it will allow you to interactively clone, rename, scrap off the git history and start a new repo.
 
+*Warning: this project is still in developement and is not really functionnal as it is.*
+
+Getting BaseProject
+-------------------
+
+As of now, BaseProject is hosted on GitHub [here](https://github.com/Marneus68/BaseProject), that might change some day.
+
 Using BaseProject
 -----------------
 
