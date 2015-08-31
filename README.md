@@ -4,6 +4,10 @@ BaseProject
 What is BaseProject ?
 ---------------------
 
+BaseProject is an attempt at creating a simple way to manage project stubs with the help of git and the GitHub platform. This is done through a simple bash script that takes a lot of inspiration from [Yeoman](http://yeoman.io/).
+
+Basically, you store some projects you want to use as bases on your GitHub repo. You configure the BaseProject to look up on that repo, and it will allow you to interactively clone, rename, scrap off the git history and start a new repo.
+
 Using BaseProject
 -----------------
 
